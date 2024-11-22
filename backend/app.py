@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+import MySQLdb
 
 app = Flask(__name__)
 CORS(app)
@@ -79,6 +80,145 @@ def login():
 #     mysql.connection.commit()
 #     cursor.close()
 
+
+@app.route('/getConstituencyInfo', methods=['GET'])
+def get_constituency_info():
+    voter_id = request.args.get('voterId')
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getconsinfo', [voter_id])
+    results = cursor.fetchall()
+    cursor.close()
+
+    constituency_info = []
+    for row in results:
+        constituency_info.append({
+            'constituencyName': row[0],
+            'state': row[1],
+            'voterCount': row[2],
+            'candidateName': row[3],
+            'candidateAge': row[4],
+            'partyName': row[5],
+            'partySymbol': row[6]
+        })
+
+    return jsonify(constituency_info)
+
+@app.route('/getConstituencyDetails', methods=['GET'])
+def get_constituency_details():
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getconsdets')
+    results = cursor.fetchall()
+    cursor.close()
+
+    constituency_details = []
+    for row in results:
+        constituency_details.append({
+            'constituencyName': row[0],
+            'maleCount': row[1],
+            'femaleCount': row[2],
+            'pollBoothCount': row[3]
+        })
+
+    return jsonify(constituency_details)
+
+@app.route('/getVoterDetails', methods=['GET'])
+def get_voter_details():
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getvoterdets')
+    results = cursor.fetchall()
+    cursor.close()
+
+    voter_details = []
+    for row in results:
+        voter_details.append({
+            'aadharId': row[0],
+            'firstName': row[1],
+            'lastName': row[2],
+            'middleName': row[3],
+            'gender': row[4],
+            'dob': row[5],
+            'age': row[6],
+            'state': row[7],
+            'phoneNo': row[8],
+            'constituencyName': row[9],
+            'pollBoothId': row[10],
+            'voterId': row[11]
+        })
+
+    return jsonify(voter_details)
+
+@app.route('/getCandidateDetails', methods=['GET'])
+def get_candidate_details():
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getcanddets')
+    results = cursor.fetchall()
+    cursor.close()
+
+    candidate_details = []
+    for row in results:
+        candidate_details.append({
+            'aadharId': row[0],
+            'firstName': row[1],
+            'lastName': row[2],
+            'middleName': row[3],
+            'gender': row[4],
+            'dob': row[5],
+            'age': row[6],
+            'phoneNo': row[7],
+            'consFight': row[8],
+            'candidateId': row[9],
+            'partyRep': row[10]
+        })
+
+    return jsonify(candidate_details)
+
+@app.route('/getPartyDetails', methods=['GET'])
+def get_party_details():
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getpartydets')
+    results = cursor.fetchall()
+    cursor.close()
+
+    party_details = []
+    for row in results:
+        party_details.append({
+            'partyName': row[0],
+            'partySymbol': row[1],
+            'president': row[2],
+            'partyFunds': row[3],
+            'headquarters': row[4],
+            'seatsWon': row[5],
+            'partyMemberCount': row[6]
+        })
+
+    return jsonify(party_details)
+
+@app.route('/getOfficialDetails', methods=['GET'])
+def get_official_details():
+    cursor = mysql.connection.cursor()
+    cursor.callproc('getofficialdets')
+    results = cursor.fetchall()
+    cursor.close()
+
+    official_details = []
+    for row in results:
+        official_details.append({
+            'aadharId': row[0],
+            'firstName': row[1],
+            'lastName': row[2],
+            'middleName': row[3],
+            'gender': row[4],
+            'dob': row[5],
+            'age': row[6],
+            'phoneNo': row[7],
+            'constituencyAssigned': row[8],
+            'pollBoothAssigned': row[9],
+            'officialId': row[10],
+            'officialRank': row[11],
+            'higherRankId': row[12]
+        })
+
+    return jsonify(official_details)
 
 @app.route('/api/constituencies', methods=['GET'])
 def get_constituencies():
@@ -200,12 +340,19 @@ def add_voter():
     voter_id = data['voterId']
 
     cursor = mysql.connection.cursor()
-    cursor.execute("""
-        INSERT INTO voter (aadhar_id, first_name, middle_name, last_name, gender, dob, age, state, phone_no, constituency_name, poll_booth_id, voter_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, state, phone_no, constituency_name, poll_booth_id, voter_id))
-    mysql.connection.commit()
-    cursor.close()
+    try:
+        cursor.execute("""
+            INSERT INTO voter (aadhar_id, first_name, middle_name, last_name, gender, dob, age, state, phone_no, constituency_name, poll_booth_id, voter_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, state, phone_no, constituency_name, poll_booth_id, voter_id))
+        mysql.connection.commit()
+    except MySQLdb.IntegrityError as e:
+        if e.args[0] == 1062:
+            return jsonify({'message': 'Duplicate entry for voter_id'}), 400
+        else:
+            raise
+    finally:
+        cursor.close()
 
     return jsonify({'message': 'Voter added successfully'}), 201
 
@@ -226,12 +373,19 @@ def add_official():
     higher_rank_id = data['higherRankId']
 
     cursor = mysql.connection.cursor()
-    cursor.execute("""
-        INSERT INTO official (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, constituency_assigned, poll_booth_assigned, official_id, official_rank, higher_rank_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, constituency_assigned, poll_booth_assigned, official_id, official_rank, higher_rank_id))
-    mysql.connection.commit()
-    cursor.close()
+    try:
+        cursor.execute("""
+            INSERT INTO official (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, constituency_assigned, poll_booth_assigned, official_id, official_rank, higher_rank_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, constituency_assigned, poll_booth_assigned, official_id, official_rank, higher_rank_id))
+        mysql.connection.commit()
+    except MySQLdb.IntegrityError as e:
+        if e.args[0] == 1062:
+            return jsonify({'message': 'Duplicate entry for official_id'}), 400
+        else:
+            raise
+    finally:
+        cursor.close()
 
     return jsonify({'message': 'Official added successfully'}), 201
 
@@ -250,12 +404,19 @@ def add_candidate():
     party_rep = data['partyRep']
 
     cursor = mysql.connection.cursor()
-    cursor.execute("""
-        INSERT INTO candidate (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, cons_fight, candidate_id, party_rep)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, cons_fight, candidate_id, party_rep))
-    mysql.connection.commit()
-    cursor.close()
+    try:
+        cursor.execute("""
+            INSERT INTO candidate (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, cons_fight, candidate_id, party_rep)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (aadhar_id, first_name, middle_name, last_name, gender, dob, age, phone_no, cons_fight, candidate_id, party_rep))
+        mysql.connection.commit()
+    except MySQLdb.IntegrityError as e:
+        if e.args[0] == 1062:
+            return jsonify({'message': 'Duplicate entry for candidate_id'}), 400
+        else:
+            raise
+    finally:
+        cursor.close()
 
     return jsonify({'message': 'Candidate added successfully'}), 201
 
@@ -357,6 +518,31 @@ def update_party():
 
     return jsonify({'message': 'Party updated successfully'}), 200
 
+
+@app.route('/registerCandidate', methods=['POST'])
+def register_candidate():
+    data = request.get_json()
+    aadhar_id = data['aadharId']
+    first_name = data['firstName']
+    middle_name = data['middleName']
+    last_name = data['lastName']
+    gender = data['gender']
+    dob = data['dob']
+    state = data['state']
+    phone_no = data['phone']
+    constituency_name = data['constituencyName']
+    party_name = data['partyName']
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        INSERT INTO candidate (aadhar_id, first_name, middle_name, last_name, gender, dob, state, phone_no, constituency_name, party_name)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (aadhar_id, first_name, middle_name, last_name, gender, dob, state, phone_no, constituency_name, party_name))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'Candidate registered successfully'}), 201
+
 @app.route('/deleteParty', methods=['POST'])
 def delete_party():
     data = request.get_json()
@@ -413,6 +599,60 @@ def check_official_role(aadhar_id):
     role = cursor.fetchone()
     cursor.close()
     return role and role[0] == 'official'
+
+@app.route('/getvoterinformation', methods=['GET'])
+def get_voter_information():
+    aadhar_id = request.args.get('aadharId')
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM voter")
+    voter = cursor.fetchone()
+    cursor.close()
+
+    if voter:
+        voter_data = {
+            'aadharId': voter[0],
+            'firstName': voter[1],
+            'middleName': voter[2],
+            'lastName': voter[3],
+            'gender': voter[4],
+            'dob': voter[5],
+            'age': voter[6],
+            'state': voter[7],
+            'phoneNumber': voter[8],
+            'constituencyName': voter[9],
+            'pollingBoothId': voter[10],
+            'voterId': voter[11]
+        }
+        return jsonify(voter_data)
+    else:
+        return jsonify({'message': 'Voter not found'}), 404
+    
+@app.route('/getConstDeets', methods=['GET'])
+def get_const_deets():
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT constituency_name, 
+               SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) AS male_count,
+               SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) AS female_count,
+               COUNT(DISTINCT poll_booth_id) AS poll_booth_count
+        FROM voter
+        GROUP BY constituency_name
+    """)
+    results = cursor.fetchall()
+    cursor.close()
+
+    constituency_data = []
+    for row in results:
+        constituency_data.append({
+            'constituencyName': row[0],
+            'maleCount': row[1],
+            'femaleCount': row[2],
+            'pollBoothCount': row[3]
+        })
+
+    return jsonify(constituency_data)
+
+
 
 # @app.route('/deleteParty', methods=['POST'])
 # def delete_party():

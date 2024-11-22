@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Navbar from '@/components/Navbar';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface VoterData {
@@ -19,16 +19,24 @@ interface VoterData {
   voterId: string;
 }
 
-export default function Registration() {
+export default function VoterInformation() {
   const [data, setData] = useState<VoterData | null>(null);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const aadhar_id = user.aadhar_id;
+  const aadhar_id = user.aadharId;
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`http://127.0.0.1:5000/getvoterinformation?aadharId=${aadhar_id}`);
-      const data: VoterData = await response.json();
-      setData(data);
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/getvoterinformation`);
+        if (response.ok) {
+          const data: VoterData = await response.json();
+          setData(data);
+        } else {
+          console.error('Failed to fetch voter information');
+        }
+      } catch (error) {
+        console.error('Error fetching voter information:', error);
+      }
     };
 
     fetchData();
@@ -41,25 +49,25 @@ export default function Registration() {
       </Head>
       <Navbar />
       <div className="w-full max-w-screen-xl mx-auto pb-96">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="px-6">Aadhar ID</th>
-              <th className="px-6">First Name</th>
-              <th className="px-6">Middle Name</th>
-              <th className="px-6">Last Name</th>
-              <th className="px-6">Gender</th>
-              <th className="px-6">DOB</th>
-              <th className="px-6">Age</th>
-              <th className="px-6">State</th>
-              <th className="px-6">Phone Number</th>
-              <th className="px-6">Constituency Name</th>
-              <th className="px-6">Polling Booth ID</th>
-              <th className="px-6">Voter ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data && (
+        {data ? (
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th>Aadhar ID</th>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Last Name</th>
+                <th>Gender</th>
+                <th>Date of Birth</th>
+                <th>Age</th>
+                <th>State</th>
+                <th>Phone Number</th>
+                <th>Constituency Name</th>
+                <th>Polling Booth ID</th>
+                <th>Voter ID</th>
+              </tr>
+            </thead>
+            <tbody>
               <tr>
                 <td>{data.aadharId}</td>
                 <td>{data.firstName}</td>
@@ -74,19 +82,11 @@ export default function Registration() {
                 <td>{data.pollingBoothId}</td>
                 <td>{data.voterId}</td>
               </tr>
-            )}
-          </tbody>
-        </table>
-        <Link legacyBehavior href="/update/voter">
-          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Update
-          </button>
-        </Link>
-        <Link legacyBehavior href="/update/voter">
-          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Delete
-          </button>
-        </Link>
+            </tbody>
+          </table>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
     </div>
   );

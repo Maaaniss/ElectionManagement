@@ -15,16 +15,19 @@ const options = {
     { label: 'Voter Registration', link: '/register/voter' },
     { label: 'Voter Information', link: '/information/voter' },
     { label: 'Query Procedure', link: '/query/voter' },
+    { label: 'Edit Voter', link: '/update/voter' },
   ],
   candidates: [
     { label: 'Candidate Registration', link: '/register/candidate' },
     { label: 'Candidate Information', link: '/information/candidate' },
     { label: 'Query Procedure', link: '/query/candidate' },
+    { label: 'Edit Candidate', link: '/update/candidate' },
   ],
   parties: [
     { label: 'Party Registration', link: '/register/party' },
     { label: 'Party Information', link: '/information/party' },
     { label: 'Query Procedure', link: '/query' },
+    { label: 'Edit Party', link: '/update/party' },
   ],
   officials: [
     { label: 'Official Registration', link: '/register/eci' },
@@ -33,6 +36,8 @@ const options = {
     { label: 'Edit Constituency', link: '/edit/constituency' },
     { label: 'Edit Poll Booth', link: '/edit/pollbooth' },
     { label: 'Edit Elections', link: '/edit/elections' },
+    { label: 'Edit Official', link: '/edit/official' },
+    { label: 'Edit Party', link: '/update/party' },
   ],
 };
 

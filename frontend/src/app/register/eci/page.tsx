@@ -1,7 +1,7 @@
 'use client';
 import Head from 'next/head';
 import Navbar from '@/components/Navbar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface FormData {
@@ -36,6 +36,17 @@ const Registration: React.FC = () => {
     officialRank: '',
     higherRankId: '',
   });
+
+  useEffect(() => {
+    // Assume the user's Aadhar ID is stored in local storage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user && user.aadharId) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        aadharId: user.aadharId,
+      }));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -85,7 +96,7 @@ const Registration: React.FC = () => {
               id="aadharId"
               name="aadharId"
               value={formData.aadharId}
-              onChange={handleChange}
+              readOnly
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>

@@ -2,8 +2,9 @@
 import Head from 'next/head';
 import Navbar from '@/components/Navbar';
 import React, { useState } from 'react';
+import Link from 'next/link';
 
-const Registration: React.FC = () => {
+const OfficialUpdate: React.FC = () => {
   const [formData, setFormData] = useState({
     aadharId: '',
     firstName: '',
@@ -28,7 +29,7 @@ const Registration: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/updateOfficial', {
+      const response = await fetch('http://localhost:5000/updateOfficial', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,26 +42,6 @@ const Registration: React.FC = () => {
       }
 
       console.log('Successfully updated official');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/deleteOfficial', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Something went wrong');
-      }
-
-      console.log('Successfully deleted official');
     } catch (error) {
       console.error('Error:', error);
     }
@@ -214,12 +195,14 @@ const Registration: React.FC = () => {
             </button>
           </div>
         </form>
-        <button onClick={handleDelete} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Delete Record
-        </button>
+        <Link href="/delete/official">
+          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Delete 
+          </button>
+        </Link>
       </div>
     </div>
   );
 };
 
-export default Registration;
+export default OfficialUpdate;

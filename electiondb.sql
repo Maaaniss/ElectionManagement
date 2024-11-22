@@ -1,3 +1,4 @@
+
 create database electiondb;
 use electiondb;
 
@@ -87,6 +88,26 @@ create event update_cand_age on schedule every 1 month do begin update candidate
 create trigger cand_age_on_update before update on candidate for each row begin if NEW.dob != OLD.dob then set NEW.age = TIMESTAMPDIFF(YEAR, NEW.dob, CURDATE()); end if; end//
 delimiter ;
 
+DELIMITER //
+
+CREATE FUNCTION total_voters(constituency_id INT) RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE total INT DEFAULT 0;
+
+  SELECT voter_count INTO total FROM constituency WHERE constituency_id = constituency_id;
+
+  SET total = total + (
+    SELECT COALESCE(SUM(total_voters(sub.constituency_id)), 0)
+    FROM constituency sub
+    WHERE sub.parent_constituency_id = constituency_id
+  );
+
+  RETURN total;
+END //
+
+DELIMITER ;
+
 alter table election_cons modify winner_c varchar(20);
 
 alter table election_cons add foreign key (winner_c) references candidate(candidate_id);
@@ -107,15 +128,24 @@ delimiter ;
 
 drop table election_cons;
 
+
+
 alter table constituency add column election_id int, add foreign key(election_id) references election(election_id);
 alter table constituency add column current_mla varchar(20) unique, add foreign key (current_mla) references candidate(candidate_id);
 
 alter table voter modify phone_no varchar(10);
 alter table voter modify aadhar_id varchar(5);
 alter table candidate modify phone_no varchar(10);
-alter table candidate modify aadhar_id varchar(5);
+alter table candidate modify aadhar_id varchar(5); 
 alter table official modify phone_no varchar(10);
 alter table official modify aadhar_id varchar(5);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON electiondb.* TO 'official_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON electiondb.election TO 'official_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON electiondb.poll_booth TO 'official_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON electiondb.constituency TO 'official_user'@'localhost';
+
+FLUSH PRIVILEGES;
 
 insert into constituency(constituency_id,constituency_name,state) values(1,'Bangalore Urban','Karnataka') ;
 insert into constituency(constituency_id,constituency_name,state) values(2,'Bangalore Rural','Karnataka');
@@ -187,3 +217,15 @@ alter table constituency drop constraint constituency_ibfk_2;
 
 alter table constituency drop column current_mla;
 alter table party drop column party_leader;
+
+DELIMITER //
+CREATE TRIGGER increment_party_member_count
+AFTER INSERT ON candidate
+FOR EACH ROW
+BEGIN
+  UPDATE party
+  SET party_member_count = party_member_count + 1
+  WHERE party_name = NEW.party_rep;
+END;
+//
+DELIMITER ;

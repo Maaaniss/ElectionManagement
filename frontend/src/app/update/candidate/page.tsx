@@ -1,36 +1,24 @@
 'use client';
 import Head from 'next/head';
-import Navbar from '@/components/Navbar';
+import Navbar from "../../../components/Navbar"
 import React, { useState } from 'react';
+import Link from 'next/link';
 
-interface FormData {
-  aadharId: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  gender: string;
-  dob: string;
-  phone: string;
-  constituency: string;
-  candidateId: string;
-  partyRep: string;
-}
-
-const Registration: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
+export default function UpdateCandidate() {
+  const [formData, setFormData] = useState({
     aadharId: '',
     firstName: '',
-    middleName: '',
     lastName: '',
+    middleName: '',
     gender: '',
     dob: '',
+    state: '',
     phone: '',
-    constituency: '',
     candidateId: '',
-    partyRep: '',
+    partyRep: ''
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -54,26 +42,6 @@ const Registration: React.FC = () => {
       }
 
       console.log('Successfully updated candidate');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/deleteCandidate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Something went wrong');
-      }
-
-      console.log('Successfully deleted candidate');
     } catch (error) {
       console.error('Error:', error);
     }
@@ -167,6 +135,19 @@ const Registration: React.FC = () => {
             />
           </div>
           <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="state">
+              State
+            </label>
+            <input
+              type="text"
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
               Phone Number
             </label>
@@ -175,19 +156,6 @@ const Registration: React.FC = () => {
               id="phone"
               name="phone"
               value={formData.phone}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="constituency">
-              Constituency Fighting
-            </label>
-            <input
-              type="text"
-              id="constituency"
-              name="constituency"
-              value={formData.constituency}
               onChange={handleChange}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
@@ -207,7 +175,7 @@ const Registration: React.FC = () => {
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="partyRep">
-              Party Representing
+              Party Representative
             </label>
             <input
               type="text"
@@ -227,12 +195,12 @@ const Registration: React.FC = () => {
             </button>
           </div>
         </form>
-        <button onClick={handleDelete} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Delete Record
-        </button>
+        <Link href="/delete/candidate">
+          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Delete Record
+          </button>
+        </Link>
       </div>
     </div>
   );
-};
-
-export default Registration;
+}

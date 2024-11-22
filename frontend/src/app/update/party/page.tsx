@@ -1,36 +1,17 @@
 'use client';
 import Head from 'next/head';
-import Navbar from "../../../components/Navbar"
+import Navbar from "../../../components/Navbar";
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 export default function PartyUpdate() {
-  const handleDelete = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/deleteParty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Something went wrong');
-      }
-
-      console.log('Successfully deleted Party');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-
   const [formData, setFormData] = useState({
-      partyName: '',
-      partySymbol: '',
-      president: '',
-      partyFunds: '',
-      headquarters: '',
-      partyMemberCount: ''
+    partyName: '',
+    partySymbol: '',
+    president: '',
+    partyFunds: '',
+    headquarters: '',
+    partyMemberCount: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,9 +139,11 @@ export default function PartyUpdate() {
             </button>
           </div>
         </form>
-        <button onClick={handleDelete} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Delete Record
-        </button>
+        <Link href="/deleteParty">
+          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Delete
+          </button>
+        </Link>
       </div>
     </div>
   );
