@@ -1,6 +1,7 @@
 HEAD
 # Election Management DB System
 Made by PES1UG22CS332-PES1UG22CS453
+        Manish P - Priyam R
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
